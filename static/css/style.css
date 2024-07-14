@@ -1,0 +1,25 @@
+/* homePage.html START */
+li{
+    font-size: larger;
+}
+.animated-image {
+    width: 100%;
+    height: 100%;
+    animation: floatAnimation 3s infinite ease-in-out alternate;
+}
+
+@keyframes floatAnimation {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+/* homePage.html END */
+
+
+

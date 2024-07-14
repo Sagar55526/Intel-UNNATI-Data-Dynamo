@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Highlighting and Comparison</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js/dist/progressbar.min.js"></script>
+
+    <style>
+        body {
+    background-color: #f8f9fa;
+    color: #333333;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555555;
+}
+
+input[type="file"] {
+    display: block;
+    width: 100%;
+}
+
+.error {
+    color: red;
+    margin-top: 15px;
+}
+
+.results-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    visibility: hidden; /* Initially hidden */
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s;
+}
+
+.results-container.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.column {
+    width: 48%;
+    margin-right: 2%;
+    margin-bottom: 20px;
+}
+
+.column:last-child {
+    margin-right: 0;
+}
+
+.classified-sections,
+.highlighted-text,
+.highlighted-words,
+.template-sections {
+    background-color: #f1f3f5;
+    padding: 15px;
+    border-radius: 5px;
+    overflow: auto;
+    max-height: 300px;
+    margin-bottom: 20px;
+    border: 1px solid #dddddd;
+}
+
+.highlighted-words ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.highlighted-words li {
+    margin-bottom: 10px;
+}
+
+pre {
+    white-space: pre-wrap;
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.entity-mappings ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.entity-mappings li {
+    margin-bottom: 10px;
+}
+
+/* Styling for different entity labels */
+.label-PERSON {
+    background-color: #007bff;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.label-ORG {
+    background-color: #17a2b8;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.label-GPE {
+    background-color: #28a745;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.label-DATE {
+    background-color: #dc3545;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.label-MONEY {
+    background-color: #ffc107;
+    color: #333;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* Styling for highlighted text */
+.highlighted {
+    background-color: #ffc107 !important;
+    color: #333;
+    padding: 5px;
+    border-radius: 3px;
+    display: inline;
+}
+
+/* Styling for deviation score */
+.deviation-score {
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+/* Styling for score indicators */
+.score-indicator {
+    width: 100%;
+    margin-top: 5px;
+    border: 2px solid #cccccc;
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    position: relative;
+}
+
+.score-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.good-score {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.average-score {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.poor-score {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Styling for missing and additional content */
+.missing-content,
+.additional-content {
+    background-color: #f1f3f5;
+    color: #333;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #dddddd;
+}
+
+.missing-content h2,
+.additional-content h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.file-upload {
+    position: relative;
+    overflow: hidden;
+    background-color: #f1f3f5;
+    border: 2px dashed #cccccc;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-dragndrop {
+    display: block;
+    text-align: center;
+    font-size: 16px;
+    color: #666666;
+}
+
+.file-upload:hover {
+    border-color: #999999;
+}
+
+.file-upload.dragover {
+    border-color: #007bff;
+}
+
+h3 {
+    font-size: 50px;
+}
+
+.circular-progress-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.circular-progress-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+}
+
+.circular-progress {
+    padding-top: 10px;
+    width: 150px;
+    height: 150px;
+}
+
+.progress-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 3.8;
+}
+
+.progress-bar {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.similarity {
+    stroke: #007bff;
+}
+
+.deviation {
+    stroke: #e50d22;
+}
+
+.percentage {
+    fill: #333;
+    font-size: 0.5em;
+    text-anchor: middle;
+}
+
+.score-detail {
+    text-align: center;
+    margin-top: 5px;
+}
+
+.good-score .percentage {
+    fill: white;
+}
+
+.average-score .percentage {
+    fill: white;
+}
+
+.poor-score .percentage {
+    fill: white;
+}
+
+.score-description {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.show-results {
+    display: block !important; /* Show the results container */
+}
+
+    </style>
+</head>
+
+<body>
+
+
+    <section class="navigation">
+        <nav class="navbar navbar-expand-lg" style="background-color: #5799ef;">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url_for('home') }}" style="margin-left: 25px;">
+                    <img src="{{ url_for('static', filename='imgs/intel.png') }}" alt="Bootstrap" width="70"
+                        height="55">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto"> <!-- Using ms-auto to move items to the right -->
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="{{ url_for('home') }}"
+                                style="color: white;">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('index') }}" style="color: white;">Upload</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <div style="border: 3px solid #5799ef;">
+        <h1 class="mt-3">Upload Documents</h1>
+
+        <form action="/index" method="POST" enctype="multipart/form-data">
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="file">Upload Contract Document:</label>
+                    <div class="file-upload" id="contract-upload">
+                        <input type="file" id="file" name="file" class="file-input" onchange="updateFileName(this)">
+                        <span class="file-dragndrop">or drag and drop a file here</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="template">Upload Template Document:</label>
+                    <div class="file-upload" id="template-upload">
+                        <input type="file" id="template" name="template" class="file-input"
+                            onchange="updateFileName(this)">
+                        <span class="file-dragndrop">or drag and drop a file here</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline-primary btn-lg btn-block btn-large" type="submit"
+                    style="width: 100%;">Analyze</button>
+            </div>
+        </form>
+
+        <div class="container">
+            {% if deviation_score is defined %}
+            <div
+                class="score-indicator {% if deviation_score[0] > 0.7 and deviation_score[1] <= 15 %} good-score {% elif deviation_score[0] >= 0.4 and deviation_score[0] <= 0.7 and deviation_score[1] >= 1 and deviation_score[1] <= 20 %} average-score {% else %} poor-score {% endif %}">
+                <div class="circular-progress-row">
+                    <div class="circular-progress-container">
+                        <svg class="circular-progress" viewBox="0 0 36 36">
+                            <path class="progress-bg" d="M18 2.0845
+                                     a 15.9155 15.9155 0 0 1 0 31.831
+                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="progress-bar similarity" d="M18 2.0845
+                                     a 15.9155 15.9155 0 0 1 0 31.831
+                                     a 15.9155 15.9155 0 0 1 0 -31.831"
+                                stroke-dasharray="{{ deviation_score[0] * 50 + 50 }}, 100" />
+                            <text x="18" y="20.35" class="percentage">{{ deviation_score[0]|round(2) }}</text>
+                        </svg>
+                        <p class="score-detail">Similarity Pointer</p>
+                    </div>
+                    <div class="circular-progress-container">
+                        <svg class="circular-progress" viewBox="0 0 36 36">
+                            <path class="progress-bg" d="M18 2.0845
+                                     a 15.9155 15.9155 0 0 1 0 31.831
+                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="progress-bar deviation" d="M18 2.0845
+                                     a 15.9155 15.9155 0 0 1 0 31.831
+                                     a 15.9155 15.9155 0 0 1 0 -31.831"
+                                stroke-dasharray="{{ deviation_score[1] }}, 100" />
+                            <text x="18" y="20.35" class="percentage">{{ deviation_score[1] }}</text>
+                        </svg>
+                        <p class="score-detail">Deviated Clauses</p>
+                    </div>
+                </div>
+                {% if deviation_score[0] > 0.7 and deviation_score[1] <= 15 %} <h3>Good Score</h3>
+                    <p class="score-description">The contract closely aligns with the template.</p>
+                    {% elif deviation_score[0] >= 0.4 and deviation_score[0] <= 0.7 and deviation_score[1]>= 1 and
+                        deviation_score[1] <= 20 %} <h3>Average Score</h3>
+                            <p class="score-description">Some discrepancies between the contract and template require
+                                review.</p>
+                            {% else %}
+                            <h3>Bad Score</h3>
+                            <p class="score-description">Significant differences between the contract and template need
+                                attention.</p>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-end">
+                                <div style="margin-right: 15px;"> <!-- Adjust margin-right for desired shift -->
+                                    <button class="btn btn-outline-primary btn-lg btn-large mb-3 result" id="ResultBtn"
+                                        style="background-color: #333333 !important;"
+                                        onclick="toggleResults()">Details</button>
+                                </div>
+                            </div>
+
+            </div>
+            {% endif %}
+
+
+
+
+            <div class="results-container" id="results-container">
+                <div class="column">
+                    {% if classified_sections %}
+                    <h2>Classified Sections (Contract)</h2>
+                    <div class="classified-sections">
+                        <pre>{{ classified_sections }}</pre>
+                    </div>
+                    {% endif %}
+                    {% if highlighted_text %}
+                    <h2>Highlighted Contract Text</h2>
+                    <div class="highlighted-text">{{ highlighted_text|safe }}</div>
+                    {% endif %}
+                    {% if highlighted_words %}
+                    <h2>Highlighted Contract Words and Sections</h2>
+                    <div class="highlighted-words">
+                        <ul>
+                            {% for word in highlighted_words %}
+                            <li>{{ word.text }} (Section: {{ word.section }}) - <span class="label-{{ word.label }}">{{
+                                    word.label }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="column">
+                    {% if template_sections %}
+                    <h2>Classified Sections (Template)</h2>
+                    <div class="classified-sections">
+                        <pre>{{ template_sections }}</pre>
+                    </div>
+                    {% endif %}
+                    {% if highlighted_template_text %}
+                    <h2>Highlighted Template Text</h2>
+                    <div class="highlighted-text">{{ highlighted_template_text|safe }}</div>
+                    {% endif %}
+                    {% if highlighted_template_words %}
+                    <h2>Highlighted Template Words and Sections</h2>
+                    <div class="highlighted-words">
+                        <ul>
+                            {% for word in highlighted_template_words %}
+                            <li>{{ word.text }} (Section: {{ word.section }}) - <span class="label-{{ word.label }}">{{
+                                    word.label }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+
+                <!-- {% if error %}
+            <p class="error">{{ error }}</p>
+            {% endif %}
+            {% if additional_content %}
+            <h2>Missing Content</h2>
+            <div class="additional-content">
+                <pre>{{ additional_content }}</pre>
+            </div>
+            {% endif %} -->
+                {% if missing_content %}
+                <h2>Additional Content</h2>
+                <div class="missing-content">
+                    <pre>{{ missing_content }}</pre>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            let fileName = input.files[0].name;
+            let parent = input.parentElement;
+            let span = parent.querySelector('.file-dragndrop');
+            span.textContent = fileName;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const progressElements = document.querySelectorAll('.progress');
+
+            progressElements.forEach(el => {
+                const progressValue = el.getAttribute('data-progress');
+                el.style.background = `conic-gradient(var(--progress-color) ${progressValue}%, #ccc ${progressValue}%)`;
+            });
+        });
+        function toggleResults() {
+            var container = document.getElementById('results-container');
+            container.classList.toggle('show');
+        }
+
+
+    </script>
+
+</body>
+
+
+
+
+</html>
