@@ -10,3 +10,4 @@ Steps to execute the program:
 ![Screenshot 2024-07-14 225524](https://github.com/user-attachments/assets/fb604e73-5a65-4fb4-8f57-f2fb2548c6dd)
 ![Screenshot 2024-07-14 225545](https://github.com/user-attachments/assets/25892af5-6370-4faf-ab28-89169a68c51f)
 ![Screenshot 2024-07-14 225633](https://github.com/user-attachments/assets/33c08078-f542-4c96-b912-8292ba3197f9)
+![architecture](https://github.com/user-attachments/assets/005c203a-32de-47c8-8781-d83e464039c8)
